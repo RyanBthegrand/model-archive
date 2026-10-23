@@ -1,0 +1,312 @@
+:root {
+  --bg: #07080b;
+  --accent: #7fb8ff;
+  --cream: #f3e6c8;
+  --gold: #b8935a;
+  --text: #d9d4cb;
+  --muted: #7d7a74;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+#stage.dragging { cursor: grabbing; }
+
+/* ---------- Atmosphere overlays ---------- */
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 70% at 58% 50%, transparent 40%, rgba(0, 0, 0, 0.75) 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 18%, transparent 78%, rgba(0, 0, 0, 0.7));
+}
+.grain {
+  position: fixed;
+  inset: -50%;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.2s steps(6) infinite;
+}
+@keyframes grain {
+  0%   { transform: translate(0, 0); }
+  33%  { transform: translate(-3%, 2%); }
+  66%  { transform: translate(2%, -3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 48px;
+  pointer-events: none;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+.brand { display: flex; align-items: center; gap: 12px; color: var(--cream); font-weight: 600; }
+.brand-mark {
+  width: 10px; height: 10px;
+  transform: rotate(45deg);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  transition: border-color 1s, box-shadow 1s;
+}
+.hint { color: var(--muted); }
+
+/* ---------- Model info ---------- */
+.info {
+  --dir: 1;
+  position: fixed;
+  left: clamp(24px, 7vw, 120px);
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: min(40vw, 560px);
+  pointer-events: none;
+}
+.info > * {
+  transition: opacity 0.45s ease, transform 0.7s var(--ease-out);
+}
+.info > :nth-child(2) { transition-delay: 0.05s; }
+.info > :nth-child(3) { transition-delay: 0.1s; }
+.info.is-leaving > * {
+  opacity: 0;
+  transform: translateX(calc(var(--dir) * -40px));
+  transition-duration: 0.3s;
+  transition-delay: 0s;
+}
+.info.is-entering > * {
+  opacity: 0;
+  transform: translateX(calc(var(--dir) * 40px));
+  transition: none;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--accent);
+  transition: color 1s, opacity 0.45s ease, transform 0.7s var(--ease-out);
+}
+.rule {
+  width: 40px; height: 1px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+h1 {
+  margin: 18px 0 22px;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: clamp(36px, 5.4vw, 84px);
+  line-height: 0.95;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #fff6e2 0%, var(--cream) 45%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  color: var(--muted);
+}
+.pill {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.pill:empty { display: none; }
+
+/* ---------- Arrows ---------- */
+.arrow {
+  position: fixed;
+  top: 50%;
+  width: 64px; height: 64px;
+  margin-top: -32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: rgba(10, 11, 15, 0.35);
+  backdrop-filter: blur(6px);
+  color: var(--cream);
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.4s var(--ease-out), opacity 0.3s;
+}
+.arrow svg {
+  width: 22px; height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.arrow.prev { left: 24px; }
+.arrow.next { right: 24px; }
+.arrow:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 24px -4px var(--accent), inset 0 0 18px -8px var(--accent);
+}
+.arrow.prev:hover { transform: translateX(-4px); }
+.arrow.next:hover { transform: translateX(4px); }
+.arrow:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+.arrow:disabled { opacity: 0.2; pointer-events: none; }
+
+/* ---------- Month strip ---------- */
+.months {
+  position: fixed;
+  left: 50%;
+  bottom: 36px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  max-width: calc(100vw - 32px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.months::-webkit-scrollbar { display: none; }
+.month-btn {
+  position: relative;
+  flex: none;
+  padding: 10px 10px 14px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: 600 11px/1 'Inter', sans-serif;
+  letter-spacing: 0.22em;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.month-btn::after {
+  content: '';
+  position: absolute;
+  left: 50%; bottom: 4px;
+  width: 0; height: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  transform: translateX(-50%);
+  transition: width 0.5s var(--ease-out);
+}
+.month-btn:hover { color: var(--text); }
+.month-btn.active { color: var(--cream); }
+.month-btn.active::after { width: 60%; }
+.month-btn:disabled { color: #34332f; cursor: default; }
+.month-btn sup {
+  margin-left: 2px;
+  font-size: 8px;
+  letter-spacing: 0;
+  color: var(--accent);
+  opacity: 0.8;
+}
+
+/* ---------- Loader / messages ---------- */
+.loader {
+  position: fixed;
+  left: 50%; top: 50%;
+  width: 44px; height: 44px;
+  margin: -22px 0 0 -22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: spin 0.9s linear infinite;
+  transition: opacity 0.3s;
+}
+.loader.visible { opacity: 1; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty, .file-warning {
+  position: fixed;
+  right: clamp(24px, 7vw, 120px);
+  bottom: 110px;
+  max-width: 360px;
+  padding: 22px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 11, 15, 0.6);
+  backdrop-filter: blur(8px);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.file-warning { left: 50%; top: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%); z-index: 10; }
+.empty h2, .file-warning h2 {
+  margin: 0 0 8px;
+  font: 700 16px 'Cinzel', serif;
+  letter-spacing: 0.1em;
+  color: var(--cream);
+}
+.empty p, .file-warning p { margin: 0; color: var(--text); }
+code {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.toast {
+  position: fixed;
+  left: 50%; top: 84px;
+  transform: translate(-50%, -10px);
+  padding: 10px 18px;
+  background: rgba(60, 14, 14, 0.85);
+  border: 1px solid rgba(255, 110, 110, 0.4);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.4s var(--ease-out);
+}
+.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 760px) {
+  .topbar { padding: 18px 16px; }
+  .hint { display: none; }
+  .info {
+    left: 16px; right: 16px;
+    top: 72px;
+    transform: none;
+    max-width: none;
+  }
+  h1 { margin: 10px 0 12px; font-size: clamp(30px, 9vw, 44px); }
+  .arrow { width: 48px; height: 48px; top: auto; bottom: 88px; margin-top: 0; }
+  .arrow.prev { left: 16px; }
+  .arrow.next { right: 16px; }
+  .months { bottom: 20px; }
+  .empty { left: 16px; right: 16px; bottom: 150px; max-width: none; }
+}

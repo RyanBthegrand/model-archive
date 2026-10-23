@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model Archive 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="stage" aria-label="3D model viewer"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark"></span><span id="brand">Model Archive</span></div>
+    <div class="hint">Drag to rotate · ← → to browse</div>
+  </header>
+
+  <section class="info" id="info">
+    <div class="eyebrow"><span class="rule"></span><span id="month">—</span></div>
+    <h1 id="title">Loading</h1>
+    <div class="meta">
+      <span id="counter">00 / 00</span>
+      <span class="pill" id="filetype"></span>
+    </div>
+  </section>
+
+  <button class="arrow prev" id="prev" aria-label="Previous model">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg>
+  </button>
+  <button class="arrow next" id="next" aria-label="Next model">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg>
+  </button>
+
+  <nav class="months" id="months" aria-label="Months"></nav>
+
+  <div class="loader" id="loader" aria-hidden="true"></div>
+  <div class="empty" id="empty" hidden>
+    <h2>No models yet</h2>
+    <p>Drop <code>.glb</code>, <code>.gltf</code>, <code>.fbx</code> or <code>.obj</code> files into
+      <code>models/JAN</code> … <code>models/DEC</code>, then refresh this page.</p>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <div class="file-warning" id="fileWarning" hidden>
+    <h2>Start the local server</h2>
+    <p>Browsers block 3D files opened straight from disk. Double-click <code>serve.bat</code> in this folder instead —
+      it opens the page at <code>http://localhost:8080</code>.</p>
+  </div>
+  <script>
+    if (location.protocol === 'file:') document.getElementById('fileWarning').hidden = false;
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
