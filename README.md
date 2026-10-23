@@ -70,3 +70,7 @@ The site updates a minute or so after the push.
 
 The settings are at the top of `js/main.js` (`CONFIG` for size, spin speed, slide time and bloom; `MONTHS` for the
 per-month accent colours). The mist layers are defined in `MIST_LAYERS` in `js/effects.js`.
+
+The faint brush motifs come from `img/decals/`. They're white-on-transparent images tinted with the month colour.
+Their position, size, opacity and spin speed are in the **Decals** section of `css/style.css`. To add one, export
+white ink on a transparent background, then add a `<div class="decal ...">` in `index.html` with its own CSS rule.

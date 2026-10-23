@@ -356,6 +356,15 @@ function preload(i) {
 // ---------------------------------------------------------------------------
 const pad = (n) => String(n).padStart(2, '0');
 
+// Long names stay on one line and shrink until they fit the info column.
+function fitTitle() {
+  const el = ui.title;
+  el.style.fontSize = '';
+  const overflow = el.scrollWidth / el.clientWidth;
+  if (overflow > 1) el.style.fontSize = `${Math.floor(parseFloat(getComputedStyle(el).fontSize) / overflow)}px`;
+}
+document.fonts.ready.then(fitTitle);
+
 function updateHud(item, dir) {
   const { info } = ui;
   info.style.setProperty('--dir', dir);
@@ -365,6 +374,7 @@ function updateHud(item, dir) {
   setTimeout(() => {
     ui.month.textContent = `${item.month.name} ${CONFIG.year}`;
     ui.title.textContent = item.title;
+    fitTitle();
     ui.counter.textContent = `${pad(index + 1)} / ${pad(items.length)}`;
     ui.filetype.textContent = item.ext;
     info.classList.remove('is-leaving');
@@ -495,6 +505,7 @@ function onResize() {
   bloom.setSize(w, h);
   embers.setPixelRatio(renderer.getPixelRatio());
   updateFraming();
+  fitTitle();
 }
 window.addEventListener('resize', onResize);
 
@@ -550,6 +561,7 @@ async function init() {
     ui.prev.disabled = ui.next.disabled = true;
     ui.month.textContent = `${CONFIG.year}`;
     ui.title.textContent = 'Coming soon';
+    fitTitle();
     ui.counter.textContent = '00 / 00';
     current = createSlot(createPlaceholder());
     return;
