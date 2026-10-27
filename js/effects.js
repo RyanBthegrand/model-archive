@@ -78,6 +78,73 @@ export function createBackdrop(baseColor) {
   };
 }
 
+/**
+ * Brush-drawn motifs from img/decals, drawn as flat planes just in front of the backdrop so the mist,
+ * floor and model all render over them. Positions are screen fractions (like CSS left/top %) and sizes
+ * are fractions of the screen height / width (like min(vh, vw)), so the layout holds at any window size.
+ * spin = seconds per turn (negative turns anticlockwise).
+ */
+const DECALS = [
+  { img: 'rune-circle', opacity: 0.05, spin: 240,
+    wide:   { x: 0.61, y: 0.50, vh: 1.05, vw: 0.72 },
+    narrow: { x: 0.50, y: 0.52, vh: Infinity, vw: 1.25 } },
+  { img: 'starburst',   opacity: 0.06, spin: -160,
+    wide:   { x: 0.92, y: 0.16, vh: 0.34, vw: 0.22 },
+    narrow: { x: 0.96, y: 0.18, vh: Infinity, vw: 0.46 } },
+  { img: 'ring',        opacity: 0.08, spin: 90,
+    wide:   { x: 0.09, y: 0.82, vh: 0.26, vw: 0.16 },
+    narrow: { x: 0.06, y: 0.74, vh: Infinity, vw: 0.38 } },
+];
+const DECAL_DEPTH = -13; // just in front of the backdrop (z = -14)
+// The opacities above match the old CSS (screen blend in display colour). Light adds up in linear
+// colour here, which reads much brighter over a near-black background, so scale it down to match.
+const DECAL_GAIN = 0.3;
+
+export function createDecals() {
+  const group = new THREE.Group();
+  const loader = new THREE.TextureLoader();
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const decals = DECALS.map((def) => {
+    const texture = loader.load(`img/decals/${def.img}.webp`);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.MeshBasicMaterial({
+      map: texture, color: new THREE.Color(), opacity: def.opacity * DECAL_GAIN,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
+    mesh.renderOrder = -8; // after the backdrop, before the mist
+    group.add(mesh);
+    return { def, mesh, material };
+  });
+
+  const center = new THREE.Vector3();
+  const dir = new THREE.Vector3();
+
+  return {
+    object: group,
+    // Re-places the decals for the current camera framing; call on resize.
+    layout(camera, position, target, narrow) {
+      dir.subVectors(target, position).normalize();
+      const distance = (DECAL_DEPTH - position.z) / dir.z;
+      center.copy(position).addScaledVector(dir, distance);
+      const height = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      const width = height * camera.aspect;
+      for (const { def, mesh } of decals) {
+        const l = narrow ? def.narrow : def.wide;
+        mesh.position.set(center.x + (l.x - 0.5) * width, center.y + (0.5 - l.y) * height, DECAL_DEPTH);
+        mesh.scale.setScalar(Math.min(l.vh * height, l.vw * width));
+      }
+    },
+    update(t, accent) {
+      for (const { def, mesh, material } of decals) {
+        material.color.copy(accent);
+        if (!still) mesh.rotation.z = (-t / def.spin) * Math.PI * 2;
+      }
+    },
+  };
+}
+
 /** Dark floor that fades out at the edges, plus a pulsing glow pool under the model. */
 export function createGround() {
   const fade = radialTexture();

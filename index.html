@@ -19,11 +19,6 @@
 </head>
 <body>
   <canvas id="stage" aria-label="3D model viewer"></canvas>
-  <div class="decals" aria-hidden="true">
-    <div class="decal rune-circle"></div>
-    <div class="decal starburst"></div>
-    <div class="decal ring"></div>
-  </div>
   <div class="vignette" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
@@ -33,11 +28,20 @@
   </header>
 
   <section class="info" id="info">
-    <div class="eyebrow"><span class="rule"></span><span id="month">—</span></div>
+    <div class="eyebrow"><span class="rule"></span><span id="counter">—</span></div>
     <h1 id="title">Loading</h1>
     <div class="meta">
-      <span id="counter">00 / 00</span>
+      <div class="modes" id="modes" role="group" aria-label="Display mode">
+        <button type="button" data-mode="turntable">Turntable</button>
+        <button type="button" data-mode="animation">Animation</button>
+        <button type="button" data-mode="both">Both</button>
+      </div>
       <span class="pill" id="filetype"></span>
+    </div>
+    <div class="notes">
+      <textarea id="notes" rows="1" spellcheck="true" aria-label="Notes about this model"
+        placeholder="Add notes – what this model was made for, tools used, what you learned…"></textarea>
+      <div class="save-status" id="saveStatus" aria-live="polite"></div>
     </div>
   </section>
 
@@ -48,13 +52,13 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg>
   </button>
 
-  <nav class="months" id="months" aria-label="Months"></nav>
+  <nav class="strip" id="strip" aria-label="Models"></nav>
 
   <div class="loader" id="loader" aria-hidden="true"></div>
   <div class="empty" id="empty" hidden>
     <h2>No models yet</h2>
-    <p>Drop <code>.glb</code>, <code>.gltf</code>, <code>.fbx</code> or <code>.obj</code> files into
-      <code>models/JAN</code> … <code>models/DEC</code>, then refresh this page.</p>
+    <p>Make a folder inside <code>models/</code> for each model and put its <code>.glb</code>, <code>.gltf</code>,
+      <code>.fbx</code> or <code>.obj</code> file in it. The folder name becomes the title. Then refresh this page.</p>
   </div>
   <div class="toast" id="toast" role="status"></div>
 

@@ -1,41 +1,45 @@
 {
-    "generated":  "2026-10-23T12:08:28",
-    "months":  {
-                   "JAN":  [
-                               "SkeletonGameExport.fbx"
-                           ],
-                   "FEB":  [
-
-                           ],
-                   "MAR":  [
-
-                           ],
-                   "APR":  [
-
-                           ],
-                   "MAY":  [
-                               "ToolsSceneV3.glb"
-                           ],
-                   "JUN":  [
-                               "RockGolem.fbx"
-                           ],
-                   "JUL":  [
-
-                           ],
-                   "AUG":  [
-
-                           ],
-                   "SEP":  [
-
-                           ],
-                   "OCT":  [
-                               "BasicEnemyV2.glb"
-                           ],
-                   "NOV":  [
-
-                           ],
-                   "DEC":  [
-
-                           ]
-               }
+    "generated":  "2026-10-27T21:47:56",
+    "models":  [
+                   {
+                       "folder":  "01 Skeleton",
+                       "file":  "SkeletonGameExport.fbx",
+                       "info":  {
+                                    "notes":  "Made in January 2026.",
+                                    "accent":  "#7fb8ff"
+                                }
+                   },
+                   {
+                       "folder":  "02 Tools Scene",
+                       "file":  "ToolsSceneV3.glb",
+                       "info":  {
+                                    "notes":  "Made in May 2026.",
+                                    "accent":  "#ffd36f"
+                                }
+                   },
+                   {
+                       "folder":  "03 Rock Golem",
+                       "file":  "RockGolem.fbx",
+                       "info":  {
+                                    "notes":  "Made in June 2026.",
+                                    "accent":  "#ffb347"
+                                }
+                   },
+                   {
+                       "folder":  "04 Angel Statue",
+                       "file":  "AngelStatue.glb",
+                       "info":  {
+                                    "notes":  "Made in July 2026.",
+                                    "accent":  "#ff7a45"
+                                }
+                   },
+                   {
+                       "folder":  "05 Basic Enemy",
+                       "file":  "BasicEnemyV2.glb",
+                       "info":  {
+                                    "notes":  "Made in October 2026.",
+                                    "accent":  "#ff8c2a"
+                                }
+                   }
+               ]
 }

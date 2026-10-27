@@ -55,43 +55,6 @@ html, body {
   100% { transform: translate(0, 0); }
 }
 
-/* ---------- Decals ----------
-   Brush-drawn motifs from img/decals, used as masks so they take on the month's accent colour.
-   Keep the opacity very low – they should only just be noticeable. */
-.decals {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  mix-blend-mode: screen;
-}
-.decal {
-  position: absolute;
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  background-color: var(--accent);
-  -webkit-mask: var(--img) center / contain no-repeat;
-  mask: var(--img) center / contain no-repeat;
-  opacity: var(--opacity);
-  animation: decal-spin var(--spin) linear infinite;
-  transition: background-color 1s;
-}
-.decal.rune-circle {
-  --img: url('../img/decals/rune-circle.webp'); --opacity: 0.05; --spin: 240s;
-  left: 61%; top: 50%; width: min(105vh, 72vw);
-}
-.decal.starburst {
-  --img: url('../img/decals/starburst.webp'); --opacity: 0.06; --spin: 160s;
-  left: 92%; top: 16%; width: min(34vh, 22vw);
-  animation-direction: reverse;
-}
-.decal.ring {
-  --img: url('../img/decals/ring.webp'); --opacity: 0.08; --spin: 90s;
-  left: 9%; top: 82%; width: min(26vh, 16vw);
-}
-@keyframes decal-spin { to { rotate: 360deg; } }
-@media (prefers-reduced-motion: reduce) { .decal { animation: none; } }
-
 /* ---------- Top bar ---------- */
 .topbar {
   position: fixed;
@@ -130,6 +93,7 @@ html, body {
 }
 .info > :nth-child(2) { transition-delay: 0.05s; }
 .info > :nth-child(3) { transition-delay: 0.1s; }
+.info > :nth-child(4) { transition-delay: 0.15s; }
 .info.is-leaving > * {
   opacity: 0;
   transform: translateX(calc(var(--dir) * -40px));
@@ -192,6 +156,62 @@ h1 {
 }
 .pill:empty { display: none; }
 
+/* Display mode picker */
+.modes {
+  display: inline-flex;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  pointer-events: auto;
+}
+.modes[hidden] { display: none; }
+.modes button {
+  padding: 7px 11px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: 600 10px/1 'Inter', sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.3s, background-color 0.6s;
+}
+.modes button + button { border-left: 1px solid rgba(255, 255, 255, 0.08); }
+.modes button:hover:not(:disabled) { color: var(--text); }
+.modes button.active { background: var(--accent); color: var(--bg); }
+.modes button:disabled { color: #3a3934; cursor: not-allowed; }
+.modes button:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* Notes – reads like the description text under a hero name; editable in place */
+.notes { margin-top: 26px; pointer-events: auto; }
+.notes[hidden] { display: none; }
+#notes {
+  display: block;
+  width: 100%;
+  max-height: 28vh;
+  padding: 10px 12px 10px 16px;
+  border: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: var(--text);
+  font: 400 14px/1.65 'Inter', sans-serif;
+  resize: none;
+  overflow-y: auto;
+  outline: none;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+#notes::placeholder { color: var(--muted); font-style: italic; }
+#notes:hover { border-left-color: rgba(255, 255, 255, 0.35); }
+#notes:focus { border-left-color: var(--accent); background: rgba(10, 11, 15, 0.45); }
+.save-status {
+  min-height: 14px;
+  margin-top: 6px;
+  padding-left: 16px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 /* ---------- Arrows ---------- */
 .arrow {
   position: fixed;
@@ -227,8 +247,8 @@ h1 {
 .arrow:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
 .arrow:disabled { opacity: 0.2; pointer-events: none; }
 
-/* ---------- Month strip ---------- */
-.months {
+/* ---------- Model strip ---------- */
+.strip {
   position: fixed;
   left: 50%;
   bottom: 36px;
@@ -239,8 +259,9 @@ h1 {
   overflow-x: auto;
   scrollbar-width: none;
 }
-.months::-webkit-scrollbar { display: none; }
-.month-btn {
+.strip[hidden] { display: none; }
+.strip::-webkit-scrollbar { display: none; }
+.tick {
   position: relative;
   flex: none;
   padding: 10px 10px 14px;
@@ -252,7 +273,7 @@ h1 {
   cursor: pointer;
   transition: color 0.3s;
 }
-.month-btn::after {
+.tick::after {
   content: '';
   position: absolute;
   left: 50%; bottom: 4px;
@@ -262,17 +283,9 @@ h1 {
   transform: translateX(-50%);
   transition: width 0.5s var(--ease-out);
 }
-.month-btn:hover { color: var(--text); }
-.month-btn.active { color: var(--cream); }
-.month-btn.active::after { width: 60%; }
-.month-btn:disabled { color: #34332f; cursor: default; }
-.month-btn sup {
-  margin-left: 2px;
-  font-size: 8px;
-  letter-spacing: 0;
-  color: var(--accent);
-  opacity: 0.8;
-}
+.tick:hover { color: var(--text); }
+.tick.active { color: var(--cream); }
+.tick.active::after { width: 60%; }
 
 /* ---------- Loader / messages ---------- */
 .loader {
@@ -340,13 +353,12 @@ code {
     transform: none;
     width: auto;
   }
-  .decal.rune-circle { left: 50%; top: 52%; width: 125vw; }
-  .decal.starburst { left: 96%; top: 18%; width: 46vw; }
-  .decal.ring { left: 6%; top: 74%; width: 38vw; }
   h1 { margin: 10px 0 12px; font-size: clamp(30px, 9vw, 44px); }
+  .notes { margin-top: 14px; }
+  #notes { max-height: 16vh; font-size: 13px; }
   .arrow { width: 48px; height: 48px; top: auto; bottom: 88px; margin-top: 0; }
   .arrow.prev { left: 16px; }
   .arrow.next { right: 16px; }
-  .months { bottom: 20px; }
+  .strip { bottom: 20px; }
   .empty { left: 16px; right: 16px; bottom: 150px; max-width: none; }
 }

@@ -9,7 +9,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { createBackdrop, createGround, createMist, createEmbers } from './effects.js';
+import { createBackdrop, createDecals, createGround, createMist, createEmbers } from './effects.js';
 
 // ---------------------------------------------------------------------------
 // Settings – tweak these to taste
@@ -23,21 +23,15 @@ const CONFIG = {
   bloom: { strength: 0.35, radius: 0.6, threshold: 0.85 },
 };
 
-// Each month gets its own accent colour for the rim lights, mist and UI.
-const MONTHS = [
-  { key: 'JAN', name: 'January',   accent: '#7fb8ff' },
-  { key: 'FEB', name: 'February',  accent: '#ff6f91' },
-  { key: 'MAR', name: 'March',     accent: '#6fe3a1' },
-  { key: 'APR', name: 'April',     accent: '#b6e36f' },
-  { key: 'MAY', name: 'May',       accent: '#ffd36f' },
-  { key: 'JUN', name: 'June',      accent: '#ffb347' },
-  { key: 'JUL', name: 'July',      accent: '#ff7a45' },
-  { key: 'AUG', name: 'August',    accent: '#ff5252' },
-  { key: 'SEP', name: 'September', accent: '#c98bff' },
-  { key: 'OCT', name: 'October',   accent: '#ff8c2a' },
-  { key: 'NOV', name: 'November',  accent: '#9aa7ff' },
-  { key: 'DEC', name: 'December',  accent: '#8fe8ff' },
+// Accent colours for the rim lights, mist and UI, handed out to models in order.
+// A model can pick its own with "accent": "#rrggbb" in its info.json.
+const PALETTE = [
+  '#7fb8ff', '#ff6f91', '#6fe3a1', '#ffd36f', '#c98bff', '#ff8c2a',
+  '#8fe8ff', '#ff5252', '#b6e36f', '#ffb347', '#9aa7ff', '#ff7a45',
 ];
+
+// turntable = spin only, animation = play the first clip without spinning, both = play while spinning
+const MODES = ['turntable', 'animation', 'both'];
 
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/';
 
@@ -47,9 +41,9 @@ const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/';
 const $ = (id) => document.getElementById(id);
 const canvas = $('stage');
 const ui = {
-  info: $('info'), month: $('month'), title: $('title'), counter: $('counter'), filetype: $('filetype'),
-  prev: $('prev'), next: $('next'), months: $('months'), loader: $('loader'), empty: $('empty'),
-  toast: $('toast'), brand: $('brand'),
+  info: $('info'), counter: $('counter'), title: $('title'), filetype: $('filetype'), modes: $('modes'),
+  notes: $('notes'), saveStatus: $('saveStatus'), prev: $('prev'), next: $('next'), strip: $('strip'),
+  loader: $('loader'), empty: $('empty'), toast: $('toast'), brand: $('brand'),
 };
 ui.brand.textContent = `Model Archive ${CONFIG.year}`;
 
@@ -88,7 +82,7 @@ function updateFraming() {
 // ---------------------------------------------------------------------------
 // Lights – warm key light plus strong coloured rim lights from behind
 // ---------------------------------------------------------------------------
-const accent = new THREE.Color(MONTHS[0].accent);
+const accent = new THREE.Color(PALETTE[0]);
 const targetAccent = accent.clone();
 
 scene.add(new THREE.HemisphereLight('#8a96b8', '#0a0806', 0.5));
@@ -114,7 +108,8 @@ scene.add(rimLeft, rimRight, uplight);
 // Atmosphere + post processing
 // ---------------------------------------------------------------------------
 const embers = createEmbers(renderer.getPixelRatio());
-const effects = [createBackdrop(CONFIG.background), createGround(), createMist(), embers];
+const decals = createDecals();
+const effects = [createBackdrop(CONFIG.background), decals, createGround(), createMist(), embers];
 effects.forEach((fx) => scene.add(fx.object));
 
 const composer = new EffectComposer(renderer);
@@ -236,21 +231,38 @@ function createPlaceholder() {
 const slots = new Set();
 let current = null;
 
-function createSlot(entry) {
+function createSlot(entry, item = null) {
   const root = new THREE.Group();
   const spinner = new THREE.Group();
   root.add(spinner);
   spinner.add(entry.pivot);
 
   let mixer = null;
+  let action = null;
   if (entry.clips.length) {
     mixer = new THREE.AnimationMixer(entry.object);
-    mixer.clipAction(entry.clips[0]).play();
+    action = mixer.clipAction(entry.clips[0]);
   }
-  const slot = { root, spinner, mixer };
+  // spin eases between 0 and 1 so switching modes slows/starts the turntable smoothly
+  const slot = { root, spinner, mixer, action, item, spin: 1, spinTarget: 1 };
+  applyMode(slot);
+  slot.spin = slot.spinTarget;
   scene.add(root);
   slots.add(slot);
   return slot;
+}
+
+function effectiveMode(item) {
+  if (!item?.hasClips) return 'turntable';
+  return MODES.includes(item.info.mode) ? item.info.mode : 'both';
+}
+
+function applyMode(slot) {
+  const mode = effectiveMode(slot.item);
+  slot.spinTarget = mode === 'animation' ? 0 : 1;
+  if (!slot.action) return;
+  if (mode === 'turntable') slot.action.stop();
+  else if (!slot.action.isRunning()) slot.action.play();
 }
 
 function removeSlot(slot) {
@@ -325,10 +337,12 @@ async function goTo(newIndex, dir) {
   }
   clearTimeout(loaderTimer);
   ui.loader.classList.remove('visible');
+  item.hasClips = entry.clips.length > 0;
+  if (hudItem === item) renderModes(item);
 
   if (outgoing) await Promise.race([outDone, wait(CONFIG.slideDuration * 0.3)]);
 
-  const slot = createSlot(entry);
+  const slot = createSlot(entry, item);
   slot.spinner.rotation.y = -0.4;
   current = slot;
   await tween(CONFIG.slideDuration, (e) => {
@@ -365,47 +379,139 @@ function fitTitle() {
 }
 document.fonts.ready.then(fitTitle);
 
+// The item whose title / notes are currently shown. It lags `index` by the 300 ms text swap,
+// so edits always go to the model the notes box is actually showing.
+let hudItem = null;
+
 function updateHud(item, dir) {
   const { info } = ui;
   info.style.setProperty('--dir', dir);
   info.classList.remove('is-entering');
   info.classList.add('is-leaving');
+  if (document.activeElement === ui.notes) ui.notes.blur();
 
   setTimeout(() => {
-    ui.month.textContent = `${item.month.name} ${CONFIG.year}`;
+    hudItem = item;
+    ui.counter.textContent = `${pad(index + 1)} / ${pad(items.length)}`;
     ui.title.textContent = item.title;
     fitTitle();
-    ui.counter.textContent = `${pad(index + 1)} / ${pad(items.length)}`;
     ui.filetype.textContent = item.ext;
+    ui.notes.value = item.info.notes ?? '';
+    fitNotes();
+    ui.saveStatus.textContent = '';
+    renderModes(item);
     info.classList.remove('is-leaving');
     info.classList.add('is-entering');
     info.getBoundingClientRect(); // flush so the enter transition plays
     info.classList.remove('is-entering');
   }, 300);
 
-  setAccent(item.month);
-  for (const btn of ui.months.children) btn.classList.toggle('active', btn.dataset.month === item.month.key);
+  setAccent(item.accent);
+  for (const btn of ui.strip.children) {
+    const active = Number(btn.dataset.index) === index;
+    btn.classList.toggle('active', active);
+    if (active) btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }
 }
 
-function setAccent(month) {
-  targetAccent.set(month.accent);
-  document.documentElement.style.setProperty('--accent', month.accent);
+function setAccent(color) {
+  targetAccent.set(color);
+  document.documentElement.style.setProperty('--accent', color);
 }
 
-function buildMonthNav() {
-  for (const month of MONTHS) {
-    const count = items.filter((it) => it.month === month).length;
+function buildStrip() {
+  ui.strip.hidden = items.length < 2;
+  items.forEach((item, i) => {
     const btn = document.createElement('button');
-    btn.className = 'month-btn';
-    btn.dataset.month = month.key;
-    btn.disabled = count === 0;
-    btn.title = count ? `${month.name} – ${count} model${count > 1 ? 's' : ''}` : `${month.name} – empty`;
-    btn.innerHTML = count > 1 ? `${month.key}<sup>${count}</sup>` : month.key;
+    btn.className = 'tick';
+    btn.dataset.index = i;
+    btn.textContent = pad(i + 1);
+    btn.title = item.title;
+    btn.setAttribute('aria-label', item.title);
     btn.addEventListener('click', () => {
-      const target = items.findIndex((it) => it.month === month);
-      if (target !== -1 && target !== index) goTo(target, target > index ? 1 : -1);
+      if (i !== index) goTo(i, i > index ? 1 : -1);
     });
-    ui.months.appendChild(btn);
+    ui.strip.appendChild(btn);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Display mode (turntable / animation / both)
+// ---------------------------------------------------------------------------
+function renderModes(item) {
+  const mode = effectiveMode(item);
+  for (const btn of ui.modes.querySelectorAll('button')) {
+    const needsClip = btn.dataset.mode !== 'turntable';
+    btn.disabled = needsClip && !item.hasClips;
+    btn.title = btn.disabled ? 'This file has no animation' : '';
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+    btn.setAttribute('aria-pressed', btn.dataset.mode === mode);
+  }
+}
+
+ui.modes.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-mode]');
+  if (!btn || btn.disabled || !hudItem) return;
+  hudItem.info.mode = btn.dataset.mode;
+  for (const slot of slots) if (slot.item === hudItem) applyMode(slot);
+  renderModes(hudItem);
+  queueSave(hudItem);
+});
+
+// ---------------------------------------------------------------------------
+// Notes – saved to models/<folder>/info.json through serve.ps1
+// ---------------------------------------------------------------------------
+let canSave = false; // false on GitHub Pages / other static hosts
+const saveTimers = new Map();
+
+function fitNotes() {
+  ui.notes.style.height = 'auto';
+  ui.notes.style.height = `${ui.notes.scrollHeight + 2}px`;
+}
+
+ui.notes.addEventListener('input', () => {
+  fitNotes();
+  if (!hudItem) return;
+  hudItem.info.notes = ui.notes.value;
+  queueSave(hudItem);
+});
+
+function setSaveStatus(item, text) {
+  if (item === hudItem) ui.saveStatus.textContent = text;
+}
+
+function queueSave(item) {
+  if (!canSave) {
+    setSaveStatus(item, 'Not saved – open through serve.bat to save');
+    return;
+  }
+  setSaveStatus(item, 'Saving…');
+  clearTimeout(saveTimers.get(item));
+  saveTimers.set(item, setTimeout(() => saveInfo(item), 600));
+}
+
+async function saveInfo(item) {
+  saveTimers.delete(item);
+  try {
+    const res = await fetch(`api/info/${encodeURIComponent(item.folder)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes: item.info.notes ?? '', mode: item.info.mode ?? '' }),
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    setSaveStatus(item, 'Saved');
+  } catch (err) {
+    console.error(`Couldn't save notes for ${item.folder}`, err);
+    setSaveStatus(item, "Couldn't save");
+  }
+}
+
+async function checkCanSave() {
+  try {
+    const res = await fetch('api/ping', { cache: 'no-store' });
+    canSave = res.ok && (await res.json()).ok === true;
+  } catch {
+    canSave = false;
   }
 }
 
@@ -418,15 +524,12 @@ function showToast(message) {
 }
 
 // ---------------------------------------------------------------------------
-// Manifest (models/manifest.json is rebuilt by serve.ps1 from the month folders)
+// Manifest (models/manifest.json is rebuilt by serve.ps1 – one entry per folder in models/)
 // ---------------------------------------------------------------------------
-function titleFromFile(file) {
-  const parts = file.split('/');
-  let name = parts.pop().replace(/\.[^.]+$/, '');
-  // glTF exports are often called scene.gltf – use the folder name instead
-  if (/^(scene|model)$/i.test(name) && parts.length) name = parts.pop();
-  return name.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
-}
+
+// "03 Rock Golem" -> "Rock Golem": a leading number only sets the order.
+const titleFromFolder = (folder) => folder.replace(/^\d+[\s._-]*/, '').replace(/[_]+/g, ' ').trim() || folder;
+const isColor = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
 
 async function loadManifest() {
   try {
@@ -435,27 +538,26 @@ async function loadManifest() {
     return await res.json();
   } catch (err) {
     console.warn('Could not read models/manifest.json – run serve.bat to generate it.', err);
-    return { months: {} };
+    return { models: [] };
   }
 }
 
 function buildItems(manifest) {
-  const list = [];
-  for (const month of MONTHS) {
-    for (const entry of manifest.months?.[month.key] ?? []) {
-      // Entries may be plain filenames, or { "file": "...", "title": "..." } if you hand-edit the manifest.
-      const file = typeof entry === 'string' ? entry : entry.file;
-      if (!file) continue;
-      list.push({
-        month,
-        file,
-        title: (typeof entry === 'object' && entry.title) || titleFromFile(file),
-        ext: file.split('.').pop().toLowerCase(),
-        url: `models/${month.key}/${file.split('/').map(encodeURIComponent).join('/')}`,
-      });
-    }
-  }
-  return list;
+  return (manifest.models ?? [])
+    .filter((m) => m?.folder && m?.file)
+    .map((m, i) => {
+      const info = { ...(m.info ?? {}) };
+      return {
+        folder: m.folder,
+        file: m.file,
+        title: titleFromFolder(m.folder),
+        ext: m.file.split('.').pop().toLowerCase(),
+        url: `models/${encodeURIComponent(m.folder)}/${m.file.split('/').map(encodeURIComponent).join('/')}`,
+        accent: isColor(info.accent) ? info.accent : PALETTE[i % PALETTE.length],
+        info,
+        hasClips: false, // known once the file has loaded
+      };
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -464,6 +566,7 @@ function buildItems(manifest) {
 ui.prev.addEventListener('click', () => step(-1));
 ui.next.addEventListener('click', () => step(1));
 window.addEventListener('keydown', (e) => {
+  if (e.target.closest?.('textarea, input')) return; // arrow keys move the caret while typing notes
   if (e.key === 'ArrowLeft') step(-1);
   if (e.key === 'ArrowRight') step(1);
 });
@@ -505,7 +608,9 @@ function onResize() {
   bloom.setSize(w, h);
   embers.setPixelRatio(renderer.getPixelRatio());
   updateFraming();
+  decals.layout(camera, framing.position, framing.target, w <= 760);
   fitTitle();
+  fitNotes();
 }
 window.addEventListener('resize', onResize);
 
@@ -527,8 +632,9 @@ function frame(now) {
   effects.forEach((fx) => fx.update(t, accent));
 
   for (const slot of slots) {
+    slot.spin += (slot.spinTarget - slot.spin) * (1 - Math.exp(-dt * 3));
     if (slot !== current || !drag.active) {
-      slot.spinner.rotation.y += (CONFIG.spinSpeed + (slot === current ? drag.velocity : 0)) * dt;
+      slot.spinner.rotation.y += (CONFIG.spinSpeed * slot.spin + (slot === current ? drag.velocity : 0)) * dt;
     }
     slot.mixer?.update(dt);
   }
@@ -553,16 +659,18 @@ async function init() {
   onResize();
   requestAnimationFrame(frame);
 
-  items = buildItems(await loadManifest());
-  buildMonthNav();
+  const [manifest] = await Promise.all([loadManifest(), checkCanSave()]);
+  items = buildItems(manifest);
+  buildStrip();
 
   if (!items.length) {
     ui.empty.hidden = false;
     ui.prev.disabled = ui.next.disabled = true;
-    ui.month.textContent = `${CONFIG.year}`;
+    ui.modes.hidden = true;
+    ui.notes.parentElement.hidden = true;
+    ui.counter.textContent = `${CONFIG.year}`;
     ui.title.textContent = 'Coming soon';
     fitTitle();
-    ui.counter.textContent = '00 / 00';
     current = createSlot(createPlaceholder());
     return;
   }
