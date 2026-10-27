@@ -1,6 +1,6 @@
 # Model Archive
 
-A three.js turntable showcase for this year's models. It has a misty, rim-lit look based on the Dota 2 update pages.
+A three.js turntable showcase for this year's models.
 
 ## Adding models
 
