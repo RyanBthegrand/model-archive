@@ -34,7 +34,8 @@ models/
 - **notes**: the text under the title. You can type it straight into the notes box on the page (see below).
 - **mode**: `turntable` (spin only), `animation` (play the first animation, no spin) or `both`. You can pick it with
   the buttons under the title. Models with an animation default to `both`. Models without one always use turntable.
-- **accent**: the model's colour for the rim light, mist and UI. Leave it out to use the next colour in `PALETTE`.
+- **accent**: the model's colour for the rim light, mist and UI. Leave it out (recommended) and the models sweep
+  smoothly from blue to green and back along the list.
 
 ### Notes and display mode
 
@@ -90,8 +91,8 @@ The site updates a minute or so after the push.
 
 ## Tweaking
 
-The settings are at the top of `js/main.js` (`CONFIG` for size, spin speed, slide time and bloom; `PALETTE` for the
-default accent colours). The mist layers are defined in `MIST_LAYERS` in `js/effects.js`.
+The settings are at the top of `js/main.js` (`CONFIG` for size, spin speed, slide time and bloom; `ACCENT_FROM` /
+`ACCENT_TO` for the two ends of the colour sweep). The mist layers are defined in `MIST_LAYERS` in `js/effects.js`.
 
 The faint brush motifs come from `img/decals/`. They're white-on-transparent images tinted with the model's accent.
 They're drawn inside the 3D scene just in front of the backdrop, so the mist and the model always render over them.

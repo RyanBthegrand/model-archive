@@ -23,12 +23,23 @@ const CONFIG = {
   bloom: { strength: 0.35, radius: 0.6, threshold: 0.85 },
 };
 
-// Accent colours for the rim lights, mist and UI, handed out to models in order.
-// A model can pick its own with "accent": "#rrggbb" in its info.json.
-const PALETTE = [
-  '#7fb8ff', '#ff6f91', '#6fe3a1', '#ffd36f', '#c98bff', '#ff8c2a',
-  '#8fe8ff', '#ff5252', '#b6e36f', '#ffb347', '#9aa7ff', '#ff7a45',
-];
+// Accent colour for the rim lights, mist and UI. Models sweep from ACCENT_FROM to ACCENT_TO and back
+// along the list, so neighbours differ only slightly and wrapping from last to first doesn't jump.
+// A model can still pick its own with "accent": "#rrggbb" in its info.json.
+const ACCENT_FROM = '#6fa8ff'; // blue
+const ACCENT_TO = '#6fe3a1';   // green
+
+function accentFor(i, count) {
+  const half = Math.max(1, Math.ceil(count / 2));
+  const t = Math.min(i, count - i) / half; // 0 → 1 → back toward 0
+  const from = new THREE.Color(ACCENT_FROM).getHSL({});
+  const to = new THREE.Color(ACCENT_TO).getHSL({});
+  return `#${new THREE.Color().setHSL(
+    THREE.MathUtils.lerp(from.h, to.h, t),
+    THREE.MathUtils.lerp(from.s, to.s, t),
+    THREE.MathUtils.lerp(from.l, to.l, t),
+  ).getHexString()}`;
+}
 
 // turntable = spin only, animation = play the first clip without spinning, both = play while spinning
 const MODES = ['turntable', 'animation', 'both'];
@@ -82,7 +93,7 @@ function updateFraming() {
 // ---------------------------------------------------------------------------
 // Lights – warm key light plus strong coloured rim lights from behind
 // ---------------------------------------------------------------------------
-const accent = new THREE.Color(PALETTE[0]);
+const accent = new THREE.Color(ACCENT_FROM);
 const targetAccent = accent.clone();
 
 scene.add(new THREE.HemisphereLight('#8a96b8', '#0a0806', 0.5));
@@ -545,7 +556,7 @@ async function loadManifest() {
 function buildItems(manifest) {
   return (manifest.models ?? [])
     .filter((m) => m?.folder && m?.file)
-    .map((m, i) => {
+    .map((m, i, list) => {
       const info = { ...(m.info ?? {}) };
       return {
         folder: m.folder,
@@ -553,7 +564,7 @@ function buildItems(manifest) {
         title: titleFromFolder(m.folder),
         ext: m.file.split('.').pop().toLowerCase(),
         url: `models/${encodeURIComponent(m.folder)}/${m.file.split('/').map(encodeURIComponent).join('/')}`,
-        accent: isColor(info.accent) ? info.accent : PALETTE[i % PALETTE.length],
+        accent: isColor(info.accent) ? info.accent : accentFor(i, list.length),
         info,
         hasClips: false, // known once the file has loaded
       };

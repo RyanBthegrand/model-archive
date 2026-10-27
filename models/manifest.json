@@ -1,44 +1,54 @@
 {
-    "generated":  "2026-10-27T21:47:56",
+    "generated":  "2026-10-28T09:12:25",
     "models":  [
                    {
-                       "folder":  "01 Skeleton",
-                       "file":  "SkeletonGameExport.fbx",
+                       "folder":  "01 Skeleton Sword",
+                       "file":  "22022026 - SKW - SkeletonSword3.glb",
                        "info":  {
-                                    "notes":  "Made in January 2026.",
-                                    "accent":  "#7fb8ff"
+                                    "notes":  "Made in January 2026. This item highlights the use of custom brush sculpting tools used within Blender. The highpoly sculpt is baked onto the model and the curvature is utilised to create glowing textures. This item acted as a prototype for characters weapons within my game. It also helped define a style ",
+                                    "mode":  "turntable"
                                 }
                    },
                    {
-                       "folder":  "02 Tools Scene",
+                       "folder":  "02 Styled Harpoon",
                        "file":  "ToolsSceneV3.glb",
                        "info":  {
-                                    "notes":  "Made in May 2026.",
-                                    "accent":  "#ffd36f"
+                                    "notes":  "Made in May 2026."
                                 }
                    },
                    {
                        "folder":  "03 Rock Golem",
-                       "file":  "RockGolem.fbx",
+                       "file":  "RockGolem.glb",
                        "info":  {
-                                    "notes":  "Made in June 2026.",
-                                    "accent":  "#ffb347"
+                                    "notes":  "Made in June 2026."
                                 }
                    },
                    {
                        "folder":  "04 Angel Statue",
                        "file":  "AngelStatue.glb",
                        "info":  {
-                                    "notes":  "Made in July 2026.",
-                                    "accent":  "#ff7a45"
+                                    "notes":  "Made in July 2026."
                                 }
                    },
                    {
-                       "folder":  "05 Basic Enemy",
+                       "folder":  "05 Flying Enemy",
                        "file":  "BasicEnemyV2.glb",
                        "info":  {
-                                    "notes":  "Made in October 2026.",
-                                    "accent":  "#ff8c2a"
+                                    "notes":  "This is a lower-tiered monster that could exist with others as part of a swarm. The model shows an attack animation"
+                                }
+                   },
+                   {
+                       "folder":  "06 Skeleton Mage",
+                       "file":  "SkeletonMageV6.glb",
+                       "info":  {
+                                    "notes":  "This model was made for my independent game Leylines. The model is fully rigged and features an idle, walk, attack and death animation"
+                                }
+                   },
+                   {
+                       "folder":  "07 Halloween Pumpkin",
+                       "file":  "Pumpkin_V03.glb",
+                       "info":  {
+                                    "notes":  "This model showcased a stylysed texture made with a smart material in substance painter"
                                 }
                    }
                ]
