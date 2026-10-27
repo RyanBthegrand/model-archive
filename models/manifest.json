@@ -1,5 +1,5 @@
 {
-    "generated":  "2026-10-28T09:12:25",
+    "generated":  "2026-10-28T09:25:19",
     "models":  [
                    {
                        "folder":  "01 Skeleton Sword",
@@ -13,28 +13,28 @@
                        "folder":  "02 Styled Harpoon",
                        "file":  "ToolsSceneV3.glb",
                        "info":  {
-                                    "notes":  "Made in May 2026."
+                                    "notes":  "This styled Harpoon was created as part of an art challenge where the prompt was to create a weapon of the deep. It was fully modelled in Blender and textured within Substance Painter"
                                 }
                    },
                    {
                        "folder":  "03 Rock Golem",
                        "file":  "RockGolem.glb",
                        "info":  {
-                                    "notes":  "Made in June 2026."
+                                    "notes":  "Made in early 2026. This model was created to help with teaching a new course developed at TAFE where students have to create a golem character. This helped me better understand workflow techniques to better prepare for my lessons"
                                 }
                    },
                    {
                        "folder":  "04 Angel Statue",
                        "file":  "AngelStatue.glb",
                        "info":  {
-                                    "notes":  "Made in July 2026."
+                                    "notes":  "This model was created as one of the anchoring assets in my game that would stand out. It has suitable topology for animation but at the moment only exists as a statue"
                                 }
                    },
                    {
                        "folder":  "05 Flying Enemy",
                        "file":  "BasicEnemyV2.glb",
                        "info":  {
-                                    "notes":  "This is a lower-tiered monster that could exist with others as part of a swarm. The model shows an attack animation"
+                                    "notes":  "Created for my personally developed game Leylines. This is a lower-tiered monster that could exist with others as part of a swarm. The model shows an attack animation."
                                 }
                    },
                    {
